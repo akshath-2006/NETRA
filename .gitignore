@@ -179,3 +179,18 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+.env
+.env.*
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pt
+*.onnx
+*.weights
+*.mp4
+*.avi
+*.mov
+*.mkv
+runs/
+.DS_Store

@@ -1,0 +1,4 @@
+vehicle,camera,time
+# One row per pass. Fill this in while you film -- 'vehicle' is any stable
+# label (the real plate is ideal), 'time' is HH:MM:SS on the synced clock.
+# Delete these examples once you have your own.

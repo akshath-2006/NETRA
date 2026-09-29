@@ -1,0 +1,66 @@
+# Camera registry -- the single source of truth for what cameras exist.
+#
+# Adding a camera to the city means adding a block here. No code changes,
+# ever. The supervisor (Milestone 6) spawns one worker process per enabled
+# camera in this file.
+#
+# FIELD NOTES
+#   source          file path (relative to project root), rtsp:// URL, or a
+#                   webcam index like "0". The same code path handles all three.
+#   target_fps      frames per second we actually process. Lower = faster.
+#                   Detection does not need every frame; 10-12 is plenty.
+#   clock_offset_s  how far into the shared virtual timeline this camera's
+#                   footage begins. This is what lets three separately-recorded
+#                   clips behave like three cameras on one city clock.
+#                   KEEP THESE CONSISTENT WITH configs/city_graph.yaml: the
+#                   offsets here imply travel speeds, and the identity resolver
+#                   will (correctly) refuse links that imply impossible ones.
+#                   0 / 240 / 640 s across 1.6 km and 3.1 km = 24 and 28 km/h.
+#   heading_deg     direction the camera faces. 0 = North, 90 = East.
+#   counting_line   where vehicles are counted, in NORMALISED coordinates
+#                   (0-1 of frame width/height) so the same line survives a
+#                   change of resolution. 'labels' names the two directions as
+#                   [positive, negative], relative to the line's own direction.
+
+cameras:
+  - id: CAM01
+    name: "MG Road Junction -- North approach"
+    source: data/videos/cam01.mp4
+    location: { lat: 12.97560, lon: 77.60680 }
+    heading_deg: 90
+    target_fps: 12
+    clock_offset_s: 0
+    loop: true
+    enabled: true
+    counting_line:
+      start: [0.04, 0.62]
+      end:   [0.96, 0.62]
+      labels: [inbound, outbound]
+
+  - id: CAM02
+    name: "Trinity Circle -- East corridor"
+    source: data/videos/cam02.mp4
+    location: { lat: 12.97310, lon: 77.61950 }
+    heading_deg: 135
+    target_fps: 12
+    clock_offset_s: 240
+    loop: true
+    enabled: true
+    counting_line:
+      start: [0.04, 0.58]
+      end:   [0.96, 0.58]
+      labels: [eastbound, westbound]
+
+  - id: CAM03
+    name: "Old Airport Road -- Gate 4"
+    source: data/videos/cam03.mp4
+    location: { lat: 12.96040, lon: 77.64720 }
+    heading_deg: 180
+    target_fps: 12
+    clock_offset_s: 640
+    loop: true
+    enabled: true
+    counting_line:
+      start: [0.04, 0.60]
+      end:   [0.96, 0.60]
+      labels: [entry, exit]

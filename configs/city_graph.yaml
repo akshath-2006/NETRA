@@ -1,0 +1,50 @@
+# The camera network as a graph.
+#
+# This file is what turns "two plate reads look similar" into "and that journey
+# is physically possible". Every candidate cross-camera link implies a travel
+# speed; if that speed is impossible on this edge, the link is rejected no
+# matter how well the plates matched.
+#
+# DISTANCES ARE ROAD DISTANCES, not straight lines. Measure them once on a map
+# for your real camera positions -- it takes ten minutes and it is the
+# difference between a plausibility gate that means something and one that does
+# not.
+
+defaults:
+  # Used when an edge is derived rather than declared. Straight-line distance
+  # between two cameras multiplied by this gives a usable road estimate.
+  detour_factor: 1.35
+
+  max_speed_kmph: 80        # above this, the link is IMPOSSIBLE -> rejected
+  speed_limit_kmph: 50      # above this it is merely ILLEGAL -> alert, not rejection
+  min_speed_kmph: 4         # below this, the vehicle stopped or it is not the same one
+  typical_speed_kmph: 28    # urban free-flow; the peak of the plausibility curve
+  max_gap_minutes: 30       # beyond this we do not attempt to link at all
+
+# With auto_edges on, any camera pair without a declared edge gets one derived
+# from their coordinates. Good enough to demo on day one; replace with measured
+# distances before you quote travel times to a judge.
+auto_edges: true
+
+edges:
+  - from: CAM01
+    to: CAM02
+    distance_km: 1.6
+    typical_speed_kmph: 26
+    max_speed_kmph: 60
+    speed_limit_kmph: 40
+    bidirectional: true
+
+  - from: CAM02
+    to: CAM03
+    distance_km: 3.1
+    typical_speed_kmph: 32
+    max_speed_kmph: 70
+    speed_limit_kmph: 50
+    bidirectional: true
+
+# Note there is deliberately NO direct CAM01 -> CAM03 edge. You declare road
+# SEGMENTS, not every camera pair -- the route between CAM01 and CAM03 runs
+# through CAM02, and the trajectory engine works that out for itself. That is
+# also what lets it say "this vehicle must have passed CAM02 but CAM02 never
+# saw it", which is a coverage gap worth reporting.

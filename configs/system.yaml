@@ -1,0 +1,230 @@
+# NETRA system configuration.
+#
+# RULE FOR THE WHOLE PROJECT: every tunable number lives in configs/, never in
+# code. Model names, thresholds, FPS caps, alert limits. When a judge asks
+# "could this run on 50 cameras?", the answer is "add 47 blocks to
+# cameras.yaml" -- not "we'd have to change the code".
+
+paths:
+  data_dir:  data
+  video_dir: data/videos
+  model_dir: data/models
+  database:  data/netra.db
+
+runtime:
+  # realtime -> pace playback to wall-clock, so the demo looks live
+  # fast     -> process as quickly as the machine allows (used for seeding)
+  mode: realtime
+
+  # auto | cpu | mps (Apple Silicon) | cuda
+  device: auto
+
+  log_level: INFO
+
+# ---------------------------------------------------------------------------
+# Performance. Everything here trades speed against quality or against the
+# look of the demo -- nothing here changes what the system concludes.
+#
+# MEASURED BREAKDOWN of one camera's runtime before tuning (120 frames, CPU):
+#   detector.track()   61.9%      <- the real cost
+#   ANPR               31.1%      <- second, and the easiest to cut safely
+#   video decode        2.9%
+#   JPEG live preview   2.2%
+#   overlay             0.9%
+#   track management    0.9%
+#   counting/consensus/db  ~0%    <- not worth optimising, measured at zero
+# ---------------------------------------------------------------------------
+performance:
+  # Threads PyTorch may use per camera process. With one process per camera,
+  # the default (all cores, per process) makes N processes fight over the same
+  # cores and each one gets slower. 1 is right when cameras >= cores; set 0 to
+  # leave PyTorch's default alone.
+  torch_threads_per_worker: 1
+
+  # THE SAME PROBLEM, for the other 31% of the runtime. ANPR runs on ONNX
+  # Runtime, which also defaults to one thread per core PER SESSION -- and
+  # each camera process holds two sessions (plate detector + OCR). Eight
+  # cameras on eight cores therefore asked for 128 threads. Capping it costs
+  # nothing when cameras >= cores, because the parallelism is already coming
+  # from running several cameras at once. 0 leaves ONNX Runtime's default.
+  onnx_threads_per_worker: 1
+
+  # How many cameras run at once. One OS process per camera is right; ALL
+  # cameras at once is not -- each worker loads its own YOLO and ANPR models,
+  # so ten at once on a four-core laptop thrash, and on one GPU they compete
+  # for the same VRAM. Cameras are independent until `resolve` runs, so
+  # batching them changes nothing about the result, only the peak load.
+  # 0 = auto (CPU count, capped at 8). Override per run with --workers.
+  max_parallel_cameras: 0
+
+  # Writing data/live/<CAM>.jpg every frame costs ~2% and only exists so the
+  # dashboard can show a moving picture. While seeding in fast mode nobody is
+  # watching, so skip it.
+  live_preview_in_fast_mode: false
+
+  # Draw the HUD/boxes onto the frame. Needed for the live preview; pointless
+  # without it.
+  overlay_in_fast_mode: false
+
+# ---------------------------------------------------------------------------
+# Filled in by later milestones. Listed here so the shape of the system is
+# visible from day one.
+# ---------------------------------------------------------------------------
+detection:
+  # Model name is a config value on purpose: yolo11n is the stable, heavily
+  # battle-tested default. Swap to yolo26n.pt (NMS-free, faster on CPU) or a
+  # larger yolo11s.pt for accuracy -- no code change either way.
+  model: yolo11n.pt
+  imgsz: 480            # smaller = faster. 480 is a good fallback on slow machines.
+  confidence: 0.35      # below this we ignore the detection entirely
+  iou: 0.50             # NMS overlap threshold
+
+  # COCO class ids we treat as vehicles.
+  #   2 car  ·  3 motorcycle  ·  5 bus  ·  7 truck   (1 = bicycle, off by default)
+  #
+  # KNOWN LIMITATION: COCO has no auto-rickshaw class. India's most common
+  # three-wheeler gets absorbed into car/truck/motorcycle or missed. Fixing it
+  # means fine-tuning on an Indian vehicle dataset -- tracked as a nice-to-have,
+  # and stated plainly in the presentation rather than papered over.
+  classes: [2, 3, 5, 7]
+tracking:
+  # ByteTrack ships with ultralytics. It is strong, it is one argument, and
+  # hand-rolling a tracker would cost days and lose to it.
+  # botsort.yaml is the alternative -- slower, but supports appearance re-ID,
+  # which we may want in M7.
+  tracker: bytetrack.yaml
+
+  # A track must survive this many frames before we trust it. Filters out
+  # one-frame flickers that would otherwise become phantom vehicles.
+  min_frames: 5
+
+  # Frames a track may go unseen before we close it out. At 12 fps this is
+  # ~2.5s, which comfortably covers a vehicle passing behind a bus.
+  max_age_frames: 30
+
+  # How many past positions to keep for the on-screen trail.
+  trail_length: 32
+anpr:
+  enabled: true
+  engine: fast-alpr           # MIT, ONNX, CPU-friendly, no account, no key
+
+  detector_model: yolo-v9-t-384-license-plate-end2end
+
+  # MODEL SLOT COUNT IS NOT A DETAIL -- IT IS THE WHOLE BALLGAME.
+  # Every fast-plate-ocr model emits a FIXED number of character slots. The
+  # v1 models emit 9. An Indian plate (KA01AB1234) is 10 characters, so a
+  # 9-slot model can never produce one: it silently drops the leading
+  # character and still reports 1.00 confidence on the truncated string.
+  # Measured on this dataset, 22 frames against known ground truth:
+  #     cct-s-v1-global-model   (9 slots)    0/22 exact   0%
+  #     cct-s-v2-global-model  (10 slots)    9/22 exact  41%
+  #     cct-xs-v2-global-model (10 slots)    0/22 exact   0%
+  # Check any candidate before switching:
+  #   LicensePlateRecognizer(hub_ocr_model=NAME).config.max_plate_slots
+  ocr_model: cct-s-v2-global-model
+  min_ocr_slots: 10           # refuse to start if the model cannot fit the format
+
+  # ONNX Runtime execution providers. 'auto' asks the installed runtime what
+  # it actually has and picks the best of CUDA > CoreML > CPU, so the same
+  # config file works on the laptop and on a GPU box. Moving ANPR onto a GPU
+  # is then `pip install onnxruntime-gpu` and nothing else.
+  # Naming a provider explicitly (e.g. CPUExecutionProvider) pins it.
+  providers: auto
+
+  # OCR every Nth frame, not every frame. A vehicle is in view for 40-90
+  # frames; reading 15 of them is plenty of evidence and three times cheaper.
+  every_n_frames: 3
+
+  # Do not even try below these sizes -- a small plate wastes the call and
+  # pollutes the vote with noise.
+  min_vehicle_width_px: 90
+
+  # MEASURED, NOT GUESSED. Accuracy binned by plate width over 182 reads on
+  # this dataset:  <175px -> 0/29 correct.  175-199px -> 73/108 (68%).
+  # Below the threshold the model returns confident, truncated garbage, and
+  # because those frames outnumber the good ones they win the length vote in
+  # consensus.py and bury the correct reads. Gating them out is what makes
+  # the vote work.
+  # THIS NUMBER IS DATASET-SPECIFIC. Re-measure it for real footage:
+  #   python backend/scripts/ocr_bakeoff.py --by-width
+  min_plate_width_px: 175
+
+  # Pad the vehicle box before cropping. YOLO's box is often tight enough to
+  # clip a plate that sits at the edge of the vehicle; padding recovers it.
+  crop_pad_frac: 0.15
+
+  # SPEED. Once a track has this many good reads that agree, stop paying for
+  # OCR on it -- the extra reads are redundant. We reopen only when a
+  # materially bigger crop shows up, because a bigger plate is better
+  # evidence and may correct an earlier truncation.
+  max_reads_per_track: 10     # 0 disables the budget entirely
+  good_read_confidence: 0.55  # what counts as a "good" read for the budget
+  reopen_width_gain: 1.25     # reopen if the plate is this much wider than the best so far
+
+  # Consensus tuning (see vision/consensus.py)
+  min_read_confidence: 0.30   # ignore reads the OCR itself doubts
+  min_reads: 2                # never call a plate from a single frame
+  target_reads: 8             # evidence beyond this stops adding confidence
+
+  # How a finished consensus is labelled for the operator. Below the tentative
+  # threshold we report NO plate rather than a probably-wrong one.
+  confirm_confidence: 0.60    # >= this, and format-valid  -> "confirmed"
+  tentative_confidence: 0.40  # >= this                    -> "tentative"
+                              # below                      -> discarded, plate is unreadable
+# ---------------------------------------------------------------------------
+# Evidence retention. One representative image per completed sighting, so an
+# investigator opening a vehicle case sees the frame the detector was most
+# confident about rather than a blank placeholder.
+#
+# DELIBERATELY NOT every frame. At ~12 KB per sighting a full demo run costs
+# well under a megabyte; retaining every frame would cost gigabytes and add
+# nothing an investigator could use.
+# ---------------------------------------------------------------------------
+evidence:
+  keep_snapshots: true
+  snapshot_pad_frac: 0.30      # generous: the evidence image must show the WHOLE plate,
+                               # not just what the detector boxed. Costs nothing.
+  snapshot_max_width_px: 480   # downscale cap; plates stay legible at this size
+  snapshot_jpeg_quality: 80
+
+identity:
+  # How the three signals are fused. Plate carries the most weight because it
+  # is the only one that identifies a specific vehicle; appearance and topology
+  # corroborate. They must sum to 1.0.
+  weight_plate: 0.60
+  weight_appearance: 0.20
+  weight_topology: 0.20
+
+  accept_threshold: 0.55      # below this we do not assert a link
+  min_plate_similarity: 0.72  # two plates less alike than this are different vehicles
+
+  # A link with no plate on one side is scored and recorded, but never
+  # asserted: the cap sits BELOW accept_threshold on purpose. Colour and shape
+  # are corroboration, not identification -- two silver hatchbacks are not the
+  # same car. An end-to-end run with this cap set above the threshold merged
+  # nine sightings into one "vehicle", which is exactly the failure mode.
+  # Setting require_plate: false is what a learned re-ID model would earn us.
+  plateless_cap: 0.50
+  require_plate: true
+
+  # DISPLAY threshold, not a decision threshold. Anything the operator sees
+  # with a final identity confidence below this is presented as an unconfirmed
+  # POSSIBLE LEAD, never as a recognised vehicle. It changes presentation only:
+  # nothing is deleted, no evidence is discarded, and the resolver's own
+  # accept_threshold above is untouched.
+  display_threshold: 0.45
+
+# ---------------------------------------------------------------------------
+# Analytics and alerts (M9)
+# ---------------------------------------------------------------------------
+analytics:
+  bucket_minutes: 5           # volume time-series resolution
+
+alerts:
+  # Congestion is measured from travel time, not vehicle count. Forty vehicles
+  # moving freely is not congestion; four crawling is.
+  congestion_index: 1.5       # median travel time this many times free flow
+  min_trips_for_congestion: 3 # never call congestion from one or two trips
+
+  # A camera that sits on a route but recorded nothing, this many times.
+  coverage_gap_count: 2

@@ -1,0 +1,85 @@
+# GENERATED from TfL open data + OSRM routing over OpenStreetMap.
+# Every edge records where its distance came from. An edge marked
+# `estimated` is a straight line times a detour factor, NOT a measured
+# road distance, and must not be presented as one.
+edges:
+  - from: CAM01
+    to: CAM02
+    distance_km: 0.826
+    distance_source: osrm
+    straight_line_km: 0.689
+    detour_ratio: 1.199
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM02
+    to: CAM03
+    distance_km: 1.373
+    distance_source: osrm
+    straight_line_km: 1.267
+    detour_ratio: 1.084
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM03
+    to: CAM04
+    distance_km: 1.614
+    distance_source: osrm
+    straight_line_km: 1.356
+    detour_ratio: 1.19
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM04
+    to: CAM05
+    distance_km: 1.919
+    distance_source: osrm
+    straight_line_km: 0.6
+    detour_ratio: 3.201
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM05
+    to: CAM06
+    distance_km: 2.16
+    distance_source: osrm
+    straight_line_km: 2.11
+    detour_ratio: 1.024
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM06
+    to: CAM07
+    distance_km: 2.03
+    distance_source: osrm
+    straight_line_km: 0.414
+    detour_ratio: 4.907
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM07
+    to: CAM08
+    distance_km: 3.315
+    distance_source: osrm
+    straight_line_km: 0.748
+    detour_ratio: 4.433
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM08
+    to: CAM09
+    distance_km: 2.711
+    distance_source: osrm
+    straight_line_km: 1.494
+    detour_ratio: 1.815
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true
+
+  - from: CAM09
+    to: CAM10
+    distance_km: 8.228
+    distance_source: osrm
+    straight_line_km: 0.449
+    detour_ratio: 18.327
+    typical_speed_kmph: 30      # urban assumption, NOT measured
+    bidirectional: true

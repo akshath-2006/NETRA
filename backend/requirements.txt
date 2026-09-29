@@ -1,0 +1,44 @@
+# NETRA backend dependencies.
+# Grows one milestone at a time so installs stay fast and failures stay obvious.
+
+# --- Milestone 1: video pipeline -------------------------------------------
+opencv-python>=4.10,<5
+numpy>=1.26,<3
+PyYAML>=6.0
+
+# --- Milestone 2: detection ------------------------------------------------
+# AGPL-3.0. Free to use; pulls torch + torchvision on first install.
+ultralytics>=8.3
+
+# --- Milestone 3: tracking -------------------------------------------------
+# ByteTrack's assignment solver. Ultralytics auto-installs this on the FIRST
+# track() call, which needs network and prints a "restart runtime" warning.
+# Pinning it here means that never happens mid-demo.
+lap>=0.5.12
+
+# --- Milestone 5: ANPR -----------------------------------------------------
+# MIT. Bundles a plate detector and a global plate-OCR model, both ONNX, both
+# about 7 MB, neither needing an account or a key.
+#
+# This line was commented out while the rest of the pipeline was written, and
+# the comment outlived the reason: ANPR has been in use since Milestone 5, so
+# a fresh `pip install -r` produced a project that imported fast_alpr and
+# failed. Uncommented, with the note it should have carried.
+#
+# ONNX RUNTIME IS DELIBERATELY NOT PINNED HERE. The CPU build
+# (`onnxruntime`) and the GPU build (`onnxruntime-gpu`) are different
+# packages providing the same `import onnxruntime`, and with both installed
+# you silently get the CPU one. Pinning either would be wrong on half the
+# machines this runs on, so fast-alpr's own CPU default applies unless
+# backend/scripts/remote_setup.sh detects a GPU and swaps it.
+#
+# On an Intel Mac you may additionally need `numpy<2`: the last PyTorch
+# wheels built for x86-64 macOS (2.2.2) predate the numpy 2 ABI.
+fast-alpr>=0.2
+
+# --- Milestone 4: event store ----------------------------------------------
+SQLAlchemy>=2.0
+
+# --- Milestone 6: API ------------------------------------------------------
+fastapi>=0.115
+uvicorn[standard]>=0.30

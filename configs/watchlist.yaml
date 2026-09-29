@@ -1,0 +1,18 @@
+# Vehicles of interest.
+#
+# A watchlist hit is FLAGGED FOR REVIEW, never asserted. Matching is fuzzy on
+# purpose -- OCR misreads a character often enough that exact matching would
+# miss real hits -- so every alert carries the similarity that produced it and
+# a human decides. A system that says "stolen vehicle detected" on a 0.86 match
+# is a system that gets someone stopped for nothing.
+
+min_similarity: 0.85     # below this we do not raise anything
+
+plates:
+  - plate: KA01AB1234
+    reason: "Demo entry -- replace with real cases before any deployment"
+    severity: warning
+
+  - plate: MH12DE1433
+    reason: "Demo entry -- unpaid toll notice"
+    severity: info

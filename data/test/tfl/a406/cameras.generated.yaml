@@ -1,0 +1,118 @@
+# GENERATED from TfL open data by backend/scripts/fetch_tfl.py
+# Powered by TfL Open Data.
+# Contains OS data (C) Crown copyright and database rights 2016.
+# Geomni UK Map data (C) and database rights 2019.
+#
+# Real cameras, real coordinates. clock_offset_s is 0 for every camera:
+# these clips were captured near-simultaneously in real time, so unlike
+# the generated demo clips they need no virtual offset to share a clock.
+cameras:
+  - id: CAM01
+    name: "A406 North Circular Rd/Telford Rd/Bounds Green Rd"
+    source: data/test/tfl/a406/LATEST_CAM01.mp4
+    location: { lat: 51.6112, lon: -0.13544 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00001.09060
+
+  - id: CAM02
+    name: "A406/Telford Rd/Bowes Rd"
+    source: data/test/tfl/a406/LATEST_CAM02.mp4
+    location: { lat: 51.6151, lon: -0.12769 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00001.09061
+
+  - id: CAM03
+    name: "A406/Bowes Rd/Green Lanes"
+    source: data/test/tfl/a406/LATEST_CAM03.mp4
+    location: { lat: 51.6124, lon: -0.10987 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00001.09064
+
+  - id: CAM04
+    name: "A406/A10 U/Pass West"
+    source: data/test/tfl/a406/LATEST_CAM04.mp4
+    location: { lat: 51.61647, lon: -0.09136 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00878
+
+  - id: CAM05
+    name: "A406/A10 U/Pass East"
+    source: data/test/tfl/a406/LATEST_CAM05.mp4
+    location: { lat: 51.61593, lon: -0.08272 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00877
+
+  - id: CAM06
+    name: "A406 Montagu Road"
+    source: data/test/tfl/a406/LATEST_CAM06.mp4
+    location: { lat: 51.61324, lon: -0.05247 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00870
+
+  - id: CAM07
+    name: "A406 Angel Road East"
+    source: data/test/tfl/a406/LATEST_CAM07.mp4
+    location: { lat: 51.61137, lon: -0.04729 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00869
+
+  - id: CAM08
+    name: "A406 Cooks Ferry R/B"
+    source: data/test/tfl/a406/LATEST_CAM08.mp4
+    location: { lat: 51.61329, lon: -0.03691 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00868
+
+  - id: CAM09
+    name: "A406 Golf Range"
+    source: data/test/tfl/a406/LATEST_CAM09.mp4
+    location: { lat: 51.60356, lon: -0.02199 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00867
+
+  - id: CAM10
+    name: "A406 Billet Upass W"
+    source: data/test/tfl/a406/LATEST_CAM10.mp4
+    location: { lat: 51.60101, lon: -0.01695 }
+    heading_deg: 0            # unknown; TfL does not publish bearing
+    target_fps: 12
+    clock_offset_s: 0
+    loop: false
+    enabled: true
+    tfl_id: JamCams_00002.00866
